@@ -550,6 +550,18 @@ SymLoadFileSymbol(UINT64 BaseAddress, const char * PdbFileName, const char * Cus
     }
 
     //
+    // Check if we've already loaded this symbol. If so, no need to call DbgHelp again
+    //
+    for (const auto item : g_LoadedModules)
+    {
+        if (item->BaseAddress == BaseAddress && item->ModuleBase != 0 &&
+            strcmp(item->PdbFilePath, PdbFileName) == 0)
+        {
+            return 0;
+        }
+    }
+
+    //
     // Determine the base address and the file size
     //
     if (!SymGetFileParams(PdbFileName, FileSize))
@@ -610,11 +622,16 @@ SymLoadFileSymbol(UINT64 BaseAddress, const char * PdbFileName, const char * Cus
 
     if (ModuleDetails->ModuleBase == NULL)
     {
-        ShowMessages("err, loading symbols failed (%x)\n",
-                     GetLastError());
-
+        DWORD LastError = GetLastError();
         free(ModuleDetails);
-        return -1;
+        if (LastError != ERROR_SUCCESS) // ERROR_SUCCESS indicates the module was already loaded
+        {
+            ShowMessages("err, loading symbols for \"%s\" failed (%x)\n",
+                         ModuleName,
+                         LastError);
+            return -1;
+        }
+        return 0;
     }
 
 #ifndef DoNotShowDetailedResult
