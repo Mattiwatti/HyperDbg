@@ -27,6 +27,7 @@ extern BOOLEAN    g_BreakPrintingOutput;
 extern BOOLEAN    g_IsConnectedToRemoteDebugger;
 extern BOOLEAN    g_OutputSourcesInitialized;
 extern BOOLEAN    g_IsSerialConnectedToRemoteDebugger;
+extern BOOLEAN    g_SerialConnectionAlreadyClosed;
 extern BOOLEAN    g_IsDebuggerModulesLoaded;
 extern BOOLEAN    g_IsReversingMachineModulesLoaded;
 extern LIST_ENTRY g_OutputSources;
@@ -81,7 +82,7 @@ ShowMessages(const char * Fmt, ...)
             //
             RemoteConnectionSendResultsToHost(TempMessage, sprintfresult);
         }
-        else if (g_IsSerialConnectedToRemoteDebugger)
+        else if (g_IsSerialConnectedToRemoteDebugger && !g_SerialConnectionAlreadyClosed)
         {
             KdSendUsermodePrints(TempMessage, sprintfresult);
         }
